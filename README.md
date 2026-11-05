@@ -4,7 +4,8 @@ Official repository for the paper:
 
 > **Generating Diverse and Verified Synthetic Clinical Notes with Labels by Construction**  
 > Matthias Lehmann, Madeleine Werthebach  
-> *GenAI for Health Workshop @ NeurIPS 2026*
+> *GenAI for Health Workshop @ NeurIPS 2026*  
+> **Dataset (Hugging Face):** [https://huggingface.co/datasets/Matt00n/SPARCLING-DE](https://huggingface.co/datasets/Matt00n/SPARCLING-DE)
 
 ---
 
@@ -89,7 +90,13 @@ To generate the full German discharge-letter benchmark (`1,150` attempted $\righ
 poetry run python -m generator.main --config experiments/config_sparcling_de.yaml
 ```
 
-*(Alternatively, download the pre-generated **SPARCLING-DE** dataset from Hugging Face and place `dataset.jsonl`, `subsample63.jsonl`, and `review_queue.jsonl` in `experiments/datasets/sparcling-de/`.)*
+*(Alternatively, download the pre-generated **SPARCLING-DE** dataset directly from [Hugging Face (`Matt00n/SPARCLING-DE`)](https://huggingface.co/datasets/Matt00n/SPARCLING-DE) into `experiments/datasets/sparcling-de/`:)*
+
+```bash
+hf download Matt00n/SPARCLING-DE \
+  --repo-type dataset \
+  --local-dir experiments/datasets/sparcling-de
+```
 
 ### CLI Options (`python -m generator.main`)
 
@@ -270,6 +277,7 @@ The deterministic renderer (`generator/render.py` + `generator/morphology.py`) i
 │   └── training/               # medBERT.de fine-tuning & transfer harness
 ├── scripts/
 │   ├── inspect_output.py       # Format dataset.jsonl into readable markdown
+│   ├── publish_hf.py           # Upload dataset to Hugging Face Hub
 │   ├── review_flagged.py       # Interactive CLI for reviewing QC-flagged docs
 │   └── run_red_team.py         # Standalone red-team runner on existing outputs
 ├── tests/                      # Unit & integration test suite (pytest)
