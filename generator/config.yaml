@@ -1,0 +1,56 @@
+# SPARCLING Configuration
+# Typed-placeholder synthesis pipeline.
+
+# Number of documents to generate
+num_letters: 10
+
+# Output directory for the benchmark artifacts
+output_dir: "./outputs/default"
+
+# Deterministic base seed; document i uses base_seed + i
+base_seed: 1000
+
+# SQLite cache for LLM responses (skeletons + re-annotation), enables resume
+cache_db_path: "./gemini_cache.db"
+
+# Run the Stage-4 red-team verification pass to measure label quality
+# (one extra LLM call per document; disable for faster/cheaper runs)
+red_team: true
+
+# Auto mode: when true, flagged documents are excluded from the final dataset
+# (instead of just being flagged for review). Useful for unattended batch runs.
+auto: true
+
+# Vertex AI / Gemini settings
+gemini_model: "gemini-3.7-flash"
+api_retry_attempts: 5
+api_retry_delay_seconds: 5
+
+# Number of documents to generate in parallel (concurrent LLM calls).
+# Set to 1 for sequential generation. Tune based on your Vertex AI quota
+# (requests-per-minute). A value of 4–8 works for most quota tiers.
+parallel_workers: 8
+
+# ---------------------------------------------------------------------------
+# Pipeline hyperparameters (optional)
+# ---------------------------------------------------------------------------
+# Every numeric knob that steers sampling, generation post-processing, and
+# red-team QC has a default baked into generator/config_schema.py that exactly
+# reproduces the historical behaviour. Override only what you need — absent keys
+# keep their defaults. The structure mirrors PipelineConfig:
+#
+# pipeline_config:
+#   sampling:
+#     difficulty:
+#       distribution: [0.30, 0.30, 0.30, 0.10]  # easy/medium/hard/adversarial
+#     dates:
+#       reference_date: "2026-09-03"            # ISO date, or "today"
+#     age:
+#       include_prob: 0.75
+#   generation:
+#     pii_typo_prob: 0.6
+#   red_team:
+#     finding_min_len: 2
+#
+# NOTE: LLM sampling temperature is intentionally NOT configurable — the client
+# default is always used.

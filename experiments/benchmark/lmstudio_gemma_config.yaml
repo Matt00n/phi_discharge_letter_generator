@@ -1,0 +1,51 @@
+# Anonymizer benchmark configuration — Gemma 4 E2B (LM Studio).
+#
+# Local open-source LLM served by LM Studio's OpenAI-compatible server. Uses the
+# EXACT same de-identification prompt, schema, cache, and retry policy as the
+# `gemini` method (only the backend differs), so results are directly comparable.
+#
+# Model: google / gemma-4-e2b.
+# IMPORTANT: `lmstudio_model` must match the model key LM Studio serves. Confirm
+# with:  curl http://localhost:1234/v1/models
+#
+# Requires the experiments dependency group (httpx). Paths are resolved relative
+# to this file's directory.
+#
+# Run with:
+#   python -m experiments.benchmark --config experiments/benchmark/lmstudio_gemma_config.yaml
+
+schema_version: 1
+
+# Gold-standard dataset (pipeline output JSONL: doc_id / text / spans per line).
+dataset_path: ../datasets/sparcling-de/dataset.jsonl
+
+# Predictions and the JSON report land in <output_dir>/<anonymizer.name>/.
+output_dir: ../results/benchmark
+
+# Uncomment for a quick smoke test on the first few documents.
+# limit: 10
+
+anonymizer:
+  name: lmstudio
+  lmstudio_model: google/gemma-4-e2b
+  lmstudio_base_url: http://localhost:1234/v1
+  # SQLite response cache — makes reruns free and resumable after interruption.
+  cache_db: ../results/benchmark/lmstudio_gemma_cache.db
+  temperature: 0.1
+  retry_attempts: 3
+  retry_delay_seconds: 5
+  # Seconds to wait for a completion (local GGUF inference can be slow).
+  lmstudio_timeout: 600
+  # Cap on generated tokens (the model rewrites the whole letter, so output ~
+  # input length). With LM Studio ctx 72168 and parallel 4, each slot gets
+  # ~18k tokens; 16384 covers a full rewrite for all but the longest ~2-3% of
+  # letters (those cap at the slot budget, scored as partial redactions).
+  lmstudio_max_tokens: 16384
+  # LM Studio is loaded with parallel 4; match it with 4 concurrent workers.
+  workers: 4
+
+evaluation:
+  # strict | lenient (IoU) | token
+  matching: lenient
+  iou_threshold: 0.5
+  verbose: false

@@ -1,0 +1,174 @@
+schema_version: 2
+random_seed: 1729
+output_path: ../results/diversity_report.json
+overwrite: false
+
+# Pairwise metrics use a uniform sample without replacement. Increase these
+# values for the final paper after fixing the computational budget.
+pair_sample_size: 10000
+bootstrap_samples: 2000
+confidence_level: 0.95
+top_k_ngrams: 50
+max_distribution_documents: 2000
+bandwidth_sample_size: 2000
+lexical_casefold: true
+strict_optional_dependencies: true
+
+deduplication:
+  ngram_size: 5
+  jaccard_threshold: 0.80
+  exhaustive_max_documents: 2000
+  minhash_permutations: 256
+  max_reported_pairs: 100
+
+profile_diversity:
+  # Every pair is traversed exactly. The run fails above this audited limit
+  # rather than making an unsupported claim that no two profiles are close.
+  close_distance_threshold: 0.10
+  exhaustive_max_documents: 5000
+  pair_distance_sample_size: 100000
+  max_reported_closest_pairs: 100
+  max_reported_field_frequencies: 100
+
+readability:
+  enabled: true
+
+llm_judge:
+  # Enabling this incurs cost and sends document text to the selected provider.
+  # The second flag is an intentional, separate data-governance acknowledgement.
+  enabled: false
+  allow_external_api_calls: false
+  model: gemini-3.7-flash
+  thinking_level: medium
+  backend: vertex_ai
+  project: null  # Otherwise read GCP_PROJECT_ID.
+  project_environment_variable: GCP_PROJECT_ID
+  location: eu  # Or set null to read GCP_LOCATION, then fall back to global.
+  location_environment_variable: GCP_LOCATION
+  api_key_environment_variable: GEMINI_API_KEY  # Used only with google_ai.
+  cache_path: ../results/gemini_realism_judge.sqlite3
+  sample_size: 200
+  repetitions: 3
+  max_document_characters: 100000
+  max_output_tokens: 8192
+  max_retries: 3
+  retry_initial_seconds: 2.0
+  passing_score: 4
+  include_rationales_in_report: false
+
+models:
+  enabled: true
+  embedding_model: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+  embedding_revision: null  # Pin to a model commit for the paper's frozen run.
+  embedding_batch_size: 32
+  embedding_chunk_tokens: 384
+  bertscore_model: FacebookAI/xlm-roberta-large
+  bertscore_revision: null  # Pin to a model commit for the paper's frozen run.
+  bertscore_num_layers: 17
+  bertscore_batch_size: 16
+  bertscore_max_tokens: 510
+  bertscore_pair_sample_size: 1000
+  subword_tokenizer_model: null
+  subword_tokenizer_revision: null
+  device: null
+
+datasets:
+  - name: synthetic
+    path: ../../outputs/default/dataset.jsonl
+    format: jsonl
+    text_field: text
+    id_field: doc_id
+    phi_spans_field: spans
+    span_start_field: start
+    span_end_field: end
+    span_label_field: label
+    span_form_field: form
+    validate_phi_offsets: true
+    # Negative traps (eponyms, look-alikes, non-PHI identifiers) share the span
+    # schema; set to null for corpora without planted negatives.
+    negatives_field: negatives
+    # Ordered section headings enable the structural section-pattern metrics.
+    section_sequence_field: metadata.sections
+    icd_fields: []
+    extract_icd_from_text: true
+    extract_ops_from_text: true
+    icd_catalog_path: ../../data/icd10_codes.txt
+    language: de
+    spacy_model: de_core_news_lg
+    # Only persisted, substantively meaningful sampling dimensions belong here.
+    # Do not include doc_id, random seed, surname, or output-derived counts: those
+    # would make separation trivially large without showing profile diversity.
+    profile_fields:
+      - name: department
+        path: metadata.fachabteilung
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: patient_age
+        path: metadata.patient_age
+        kind: numeric
+        numeric_min: 0
+        numeric_max: 110
+      - name: patient_origin
+        path: metadata.patient_origin
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: marital_status
+        path: metadata.marital_status
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: style
+        path: metadata.style
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: difficulty
+        path: metadata.difficulty
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: difficulty_tags
+        path: metadata.difficulty_tags
+        kind: set
+        include_value_labels_in_report: true
+      - name: sections
+        path: metadata.sections
+        kind: set
+        include_value_labels_in_report: true
+      - name: pii_density
+        path: metadata.pii_density
+        kind: numeric
+        numeric_min: 0
+        numeric_max: 1
+      - name: code_style
+        path: metadata.code_style
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: opening_style
+        path: metadata.opening_style
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: medication_profile
+        path: metadata.has_medications
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: letterhead_framing
+        path: metadata.framing.briefkopf
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: salutation_framing
+        path: metadata.framing.anrede
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: patient_header_framing
+        path: metadata.framing.patientenstammdaten
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: closing_framing
+        path: metadata.framing.schlussformel
+        kind: categorical
+        include_value_labels_in_report: true
+      - name: quasi_features
+        path: metadata.quasi
+        kind: set
+        include_value_labels_in_report: true
+
+  # Add comparison corpora using their own field mappings. Set
+  # phi_spans_field: null when a corpus genuinely has no span annotations.

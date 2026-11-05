@@ -1,0 +1,35 @@
+# Anonymizer benchmark configuration — Gemini (hosted LLM de-identifier).
+#
+# Runs the Gemini de-identifier over SPARCLING-DE via the canonical
+# text-replacement evaluation path. Auth is Vertex AI ADC (same creds as
+# generation / the realism judge). Responses are cached in SQLite so reruns are
+# free and an interrupted batch resumes instantly. Paths are resolved relative
+# to this file's directory.
+#
+# Run with:
+#   python -m experiments.benchmark --config experiments/benchmark/gemini_config.yaml
+
+schema_version: 1
+
+# Gold-standard dataset (pipeline output JSONL: doc_id / text / spans per line).
+dataset_path: ../datasets/sparcling-de/dataset.jsonl
+
+# Predictions and the JSON report land in <output_dir>/<anonymizer.name>/.
+output_dir: ../results/benchmark
+
+anonymizer:
+  name: gemini
+  model: gemini-3.7-flash
+  # SQLite response cache — makes reruns free and resumable after interruption.
+  cache_db: ../results/benchmark/gemini_anon_cache.db
+  temperature: 0.1
+  retry_attempts: 3
+  retry_delay_seconds: 5
+  # Concurrent LLM calls; established 16-way concurrency.
+  workers: 16
+
+evaluation:
+  # strict | lenient (IoU) | token
+  matching: lenient
+  iou_threshold: 0.5
+  verbose: false

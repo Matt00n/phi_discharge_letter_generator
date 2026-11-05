@@ -1,0 +1,34 @@
+# Anonymizer benchmark configuration — Microsoft Presidio (German spaCy).
+#
+# Runs Presidio's AnalyzerEngine with the de_core_news_lg spaCy pipeline out of
+# the box (no custom recognisers). Needs no API access or response cache. Paths
+# are resolved relative to this file's directory.
+#
+# Requires the experiments dependency group (presidio-analyzer + de_core_news_lg).
+#
+# Run with:
+#   python -m experiments.benchmark --config experiments/benchmark/presidio_config.yaml
+
+schema_version: 1
+
+# Gold-standard dataset (pipeline output JSONL: doc_id / text / spans per line).
+dataset_path: ../datasets/sparcling-de/dataset.jsonl
+
+# Predictions and the JSON report land in <output_dir>/<anonymizer.name>/.
+output_dir: ../results/benchmark
+
+# Uncomment for a quick smoke test on the first few documents.
+# limit: 10
+
+anonymizer:
+  name: presidio
+  spacy_model: de_core_news_lg
+  language: de
+  # Minimum recognizer confidence for a span to be redacted.
+  score_threshold: 0.35
+
+evaluation:
+  # strict | lenient (IoU) | token
+  matching: lenient
+  iou_threshold: 0.5
+  verbose: false

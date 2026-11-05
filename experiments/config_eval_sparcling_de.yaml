@@ -1,0 +1,249 @@
+# German cross-corpus evaluation: SPARCLING-DE vs the German reference corpora
+# (grascco, gernermed). ALL metrics except the LLM judge, neural ON.
+#
+# This is the MEANINGFUL comparison run: synthetic vs real German clinical text.
+# Cross-corpus lexical/subword/embedding distances here are interpretable
+# (shared language). sparcling_de vs grascco is the primary realism-distance
+# result.
+#
+# Run:  python -m experiments.evaluation --config experiments/config_eval_sparcling_de.yaml
+schema_version: 2
+random_seed: 1729
+output_path: results/eval_sparcling_de.json
+overwrite: false
+
+pair_sample_size: 10000
+bootstrap_samples: 2000
+confidence_level: 0.95
+top_k_ngrams: 50
+max_distribution_documents: 2000
+bandwidth_sample_size: 2000
+lexical_casefold: true
+strict_optional_dependencies: true
+
+deduplication:
+  ngram_size: 5
+  jaccard_threshold: 0.80
+  exhaustive_max_documents: 2000
+  minhash_permutations: 256
+  max_reported_pairs: 100
+
+profile_diversity:
+  close_distance_threshold: 0.10
+  exhaustive_max_documents: 5000
+  pair_distance_sample_size: 100000
+  max_reported_closest_pairs: 100
+  max_reported_field_frequencies: 100
+
+readability:
+  enabled: true
+
+llm_judge:
+  enabled: false
+  allow_external_api_calls: false
+  max_concurrent_requests: 12
+
+models:
+  enabled: true
+  embedding_model: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+  embedding_revision: null
+  embedding_batch_size: 32
+  embedding_chunk_tokens: 384
+  bertscore_model: FacebookAI/xlm-roberta-large
+  bertscore_revision: null
+  bertscore_num_layers: 17
+  bertscore_batch_size: 16
+  bertscore_max_tokens: 510
+  bertscore_pair_sample_size: 1000
+  subword_tokenizer_model: null
+  subword_tokenizer_revision: null
+  device: null
+
+datasets:
+  - name: sparcling_de
+    path: datasets/sparcling-de/dataset.jsonl
+    format: jsonl
+    text_field: text
+    id_field: doc_id
+    phi_spans_field: spans
+    span_start_field: start
+    span_end_field: end
+    span_label_field: label
+    span_form_field: form
+    validate_phi_offsets: true
+    negatives_field: negatives
+    section_sequence_field: metadata.sections
+    icd_fields: []
+    extract_icd_from_text: true
+    extract_ops_from_text: true
+    icd_catalog_path: ../data/icd10_codes.txt
+    language: de
+    spacy_model: de_core_news_lg
+    profile_fields:
+      - name: department
+        path: metadata.fachabteilung
+        kind: categorical
+      - name: patient_age
+        path: metadata.patient_age
+        kind: numeric
+        numeric_min: 0
+        numeric_max: 110
+      - name: patient_origin
+        path: metadata.patient_origin
+        kind: categorical
+      - name: marital_status
+        path: metadata.marital_status
+        kind: categorical
+      - name: style
+        path: metadata.style
+        kind: categorical
+      - name: difficulty
+        path: metadata.difficulty
+        kind: categorical
+      - name: difficulty_tags
+        path: metadata.difficulty_tags
+        kind: set
+      - name: sections
+        path: metadata.sections
+        kind: set
+      - name: pii_density
+        path: metadata.pii_density
+        kind: numeric
+        numeric_min: 0
+        numeric_max: 1
+      - name: code_style
+        path: metadata.code_style
+        kind: categorical
+      - name: opening_style
+        path: metadata.opening_style
+        kind: categorical
+      - name: medication_profile
+        path: metadata.has_medications
+        kind: categorical
+      - name: letterhead_framing
+        path: metadata.framing.briefkopf
+        kind: categorical
+      - name: salutation_framing
+        path: metadata.framing.anrede
+        kind: categorical
+      - name: patient_header_framing
+        path: metadata.framing.patientenstammdaten
+        kind: categorical
+      - name: closing_framing
+        path: metadata.framing.schlussformel
+        kind: categorical
+      - name: quasi_features
+        path: metadata.quasi
+        kind: set
+
+  # Size-matched (n=63) subsample of the corpus above, for a fair lexical /
+  # neural comparison against GRASSCO (also n=63); many metrics are sample-size
+  # sensitive. Generated once by experiments/make_subsample63.py (verified
+  # representative). The primary comparison to read is sparcling_de_63 vs
+  # grascco; its cross pairs against the full synthetic corpus are subset-of-
+  # superset and not independently meaningful.
+  - name: sparcling_de_63
+    path: datasets/sparcling-de/subsample63.jsonl
+    format: jsonl
+    text_field: text
+    id_field: doc_id
+    phi_spans_field: spans
+    span_start_field: start
+    span_end_field: end
+    span_label_field: label
+    span_form_field: form
+    validate_phi_offsets: true
+    negatives_field: negatives
+    section_sequence_field: metadata.sections
+    icd_fields: []
+    extract_icd_from_text: true
+    extract_ops_from_text: true
+    icd_catalog_path: ../data/icd10_codes.txt
+    language: de
+    spacy_model: de_core_news_lg
+    profile_fields:
+      - name: department
+        path: metadata.fachabteilung
+        kind: categorical
+      - name: patient_age
+        path: metadata.patient_age
+        kind: numeric
+        numeric_min: 0
+        numeric_max: 110
+      - name: patient_origin
+        path: metadata.patient_origin
+        kind: categorical
+      - name: marital_status
+        path: metadata.marital_status
+        kind: categorical
+      - name: style
+        path: metadata.style
+        kind: categorical
+      - name: difficulty
+        path: metadata.difficulty
+        kind: categorical
+      - name: difficulty_tags
+        path: metadata.difficulty_tags
+        kind: set
+      - name: sections
+        path: metadata.sections
+        kind: set
+      - name: pii_density
+        path: metadata.pii_density
+        kind: numeric
+        numeric_min: 0
+        numeric_max: 1
+      - name: code_style
+        path: metadata.code_style
+        kind: categorical
+      - name: opening_style
+        path: metadata.opening_style
+        kind: categorical
+      - name: medication_profile
+        path: metadata.has_medications
+        kind: categorical
+      - name: letterhead_framing
+        path: metadata.framing.briefkopf
+        kind: categorical
+      - name: salutation_framing
+        path: metadata.framing.anrede
+        kind: categorical
+      - name: patient_header_framing
+        path: metadata.framing.patientenstammdaten
+        kind: categorical
+      - name: closing_framing
+        path: metadata.framing.schlussformel
+        kind: categorical
+      - name: quasi_features
+        path: metadata.quasi
+        kind: set
+
+  - name: grascco
+    path: datasets/_adapted/grascco.jsonl
+    format: jsonl
+    text_field: text
+    id_field: doc_id
+    phi_spans_field: spans
+    span_start_field: start
+    span_end_field: end
+    span_label_field: label
+    validate_phi_offsets: true
+    icd_fields: []
+    extract_icd_from_text: true
+    extract_ops_from_text: true
+    icd_catalog_path: ../data/icd10_codes.txt
+    language: de
+    spacy_model: de_core_news_lg
+
+  - name: gernermed
+    path: datasets/_adapted/gernermed.jsonl
+    format: jsonl
+    text_field: text
+    id_field: doc_id
+    phi_spans_field: null
+    icd_fields: []
+    extract_icd_from_text: true
+    extract_ops_from_text: true
+    icd_catalog_path: ../data/icd10_codes.txt
+    language: de
+    spacy_model: de_core_news_lg

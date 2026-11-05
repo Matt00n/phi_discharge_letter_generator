@@ -1,0 +1,28 @@
+# Anonymizer benchmark configuration — rule-based (REGEX-GAZ) baseline.
+#
+# A deterministic de-identifier combining regular expressions, external Faker
+# gazetteers, and document-structure cues. It needs no API access or response
+# cache. Paths are resolved relative to this file's directory.
+#
+# Run with:
+#   python -m experiments.benchmark --config experiments/benchmark/rule_based_config.yaml
+
+schema_version: 1
+
+# Gold-standard dataset (pipeline output JSONL: doc_id / text / spans per line).
+dataset_path: ../datasets/sparcling-de/dataset.jsonl
+
+# Predictions and the JSON report land in <output_dir>/<anonymizer.name>/.
+output_dir: ../results/benchmark
+
+# Uncomment for a quick smoke test on the first few documents.
+# limit: 10
+
+anonymizer:
+  name: rule_based
+
+evaluation:
+  # strict | lenient (IoU) | token
+  matching: lenient
+  iou_threshold: 0.5
+  verbose: false

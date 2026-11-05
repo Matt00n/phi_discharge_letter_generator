@@ -1,0 +1,38 @@
+# Anonymizer benchmark configuration — Flair German NER (via Presidio).
+#
+# Runs the off-the-shelf flair/ner-german-large sequence tagger as the entity
+# backbone inside Presidio, reusing Presidio's pattern recognisers (dates, phone,
+# e-mail, URLs). Differs from presidio_config.yaml only in the NER engine.
+# Needs no API access; the first run downloads ~2 GB of model weights.
+#
+# Requires the experiments dependency group (flair + presidio-analyzer +
+# de_core_news_lg). Paths are resolved relative to this file's directory.
+#
+# Run with:
+#   python -m experiments.benchmark --config experiments/benchmark/flair_config.yaml
+
+schema_version: 1
+
+# Gold-standard dataset (pipeline output JSONL: doc_id / text / spans per line).
+dataset_path: ../datasets/sparcling-de/dataset.jsonl
+
+# Predictions and the JSON report land in <output_dir>/<anonymizer.name>/.
+output_dir: ../results/benchmark
+
+# Uncomment for a quick smoke test on the first few documents.
+# limit: 10
+
+anonymizer:
+  name: flair
+  flair_model: flair/ner-german-large
+  # spaCy model is used only for tokenisation; its NER is disabled.
+  spacy_model: de_core_news_lg
+  language: de
+  # Minimum recognizer confidence for a span to be redacted.
+  score_threshold: 0.35
+
+evaluation:
+  # strict | lenient (IoU) | token
+  matching: lenient
+  iou_threshold: 0.5
+  verbose: false

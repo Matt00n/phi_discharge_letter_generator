@@ -1,0 +1,38 @@
+# Anonymizer benchmark configuration — off-the-shelf German PII detector (OpenMed).
+#
+# Runs OpenMed/OpenMed-PII-German-ClinicalE5-Base-109M-v1, a dedicated German
+# clinical PII token-classification model (54 entity types), standalone — no
+# Presidio pattern layer. Documents are split into line/sentence segments before
+# classification (see anonymizers/openmed_pii.py) because the model is trained on
+# short PII sentences and loses recall on whole clinical letters.
+#
+# Needs no API access; the first run downloads the model weights.
+#
+# Requires the experiments dependency group (transformers). Paths are resolved
+# relative to this file's directory.
+#
+# Run with:
+#   python -m experiments.benchmark --config experiments/benchmark/openmed_config.yaml
+
+schema_version: 1
+
+# Gold-standard dataset (pipeline output JSONL: doc_id / text / spans per line).
+dataset_path: ../datasets/sparcling-de/dataset.jsonl
+
+# Predictions and the JSON report land in <output_dir>/<anonymizer.name>/.
+output_dir: ../results/benchmark
+
+# Uncomment for a quick smoke test on the first few documents.
+# limit: 10
+
+anonymizer:
+  name: openmed
+  pii_model: OpenMed/OpenMed-PII-German-ClinicalE5-Base-109M-v1
+  # Minimum recognizer confidence for a span to be redacted.
+  score_threshold: 0.35
+
+evaluation:
+  # strict | lenient (IoU) | token
+  matching: lenient
+  iou_threshold: 0.5
+  verbose: false

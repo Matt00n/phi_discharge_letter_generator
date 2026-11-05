@@ -1,0 +1,50 @@
+# Anonymizer benchmark configuration — Qwen3 35B A3B (LM Studio).
+#
+# Local open-source LLM served by LM Studio's OpenAI-compatible server. Uses the
+# EXACT same de-identification prompt, schema, cache, and retry policy as the
+# `gemini` method (only the backend differs), so results are directly comparable.
+#
+# Model: lmstudio-community / Qwen3 35B A3B GGUF (Q4_K_M).
+# IMPORTANT: `lmstudio_model` must match the model key LM Studio serves. Confirm
+# with:  curl http://localhost:1234/v1/models
+#
+# Requires the experiments dependency group (httpx). Paths are resolved relative
+# to this file's directory.
+#
+# Run with:
+#   python -m experiments.benchmark --config experiments/benchmark/lmstudio_qwen3_config.yaml
+
+schema_version: 1
+
+# Gold-standard dataset (pipeline output JSONL: doc_id / text / spans per line).
+dataset_path: ../datasets/sparcling-de/dataset.jsonl
+
+# Predictions and the JSON report land in <output_dir>/<anonymizer.name>/.
+output_dir: ../results/benchmark
+
+# Uncomment for a quick smoke test on the first few documents.
+# limit: 10
+
+anonymizer:
+  name: lmstudio
+  # Must match the key from GET /v1/models (confirm before running).
+  lmstudio_model: qwen3.6-35b-a3b
+  lmstudio_base_url: http://localhost:1234/v1
+  # SQLite response cache — makes reruns free and resumable after interruption.
+  cache_db: ../results/benchmark/lmstudio_qwen3_cache.db
+  temperature: 0.1
+  retry_attempts: 3
+  retry_delay_seconds: 5
+  # Seconds to wait for a completion (local GGUF inference can be slow).
+  lmstudio_timeout: 600
+  # Cap on generated tokens (model rewrites the whole letter; output ~ input).
+  # Keep prompt + max_tokens within the per-slot budget (ctx / parallel).
+  lmstudio_max_tokens: 16384
+  # Match LM Studio's parallel setting with concurrent workers.
+  workers: 4
+
+evaluation:
+  # strict | lenient (IoU) | token
+  matching: lenient
+  iou_threshold: 0.5
+  verbose: false

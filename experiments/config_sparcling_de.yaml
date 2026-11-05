@@ -1,0 +1,20 @@
+# SPARCLING-DE — dataset generation configuration.
+#
+# Authoritative synthetic German discharge-letter dataset with by-construction
+# PII gold spans. Mirrors the validated pipeline defaults (age include_prob=0.75,
+# difficulty [0.29/0.29/0.29/0.13], reference_date 2026-09-03) and scales to the
+# paper target: diagnosis age-gate, occupation age-banding + employer suppression,
+# age-aware relation terms, case/article-correct age adjective, and a Geriatrie
+# age-gate.
+#
+# Target 1150 attempted -> ~1019 kept after generation drops and QC exclusions.
+num_letters: 1150
+output_dir: "./experiments/datasets/sparcling-de"
+base_seed: 1000000
+cache_db_path: "./gemini_cache.db"
+gemini_model: "gemini-3.7-flash"
+api_retry_attempts: 5
+api_retry_delay_seconds: 5
+red_team: true
+auto: true
+parallel_workers: 16

@@ -1,0 +1,59 @@
+[project]
+name = "sparcling"
+version = "0.1.0"
+description = "SPARCLING: Synthetic, Provenance-Annotated, Red-teamed, CLINical data Generation engine"
+authors = [
+    {name = "Matthias Lehmann", email = "matthias.lehmann@uk-koeln.de"},
+    {name = "Madeleine Werthebach"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<3.15"
+dependencies = [
+    "google-genai (>=2.18.1,<3.0.0)",
+    "pyyaml (>=6.0.3,<7.0.0)",
+    "pydantic (>=2.13.4,<3.0.0)"
+]
+
+
+[tool.poetry]
+# The repository is a collection of research scripts and CLIs (generator,
+# evaluation, benchmark, training, ablations) rather than a single distributable
+# package, so Poetry is used only for dependency management.
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.3,<10.0.0)",
+    "ruff (>=0.12.0,<1.0.0)"
+]
+experiments = [
+    "bert-score (>=0.3.13,<0.4.0)",
+    "datasketch (>=1.6.5,<2.0.0)",
+    "faker (>=30.0.0,<40.0.0)",
+    "de-core-news-lg @ https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.8.0/de_core_news_lg-3.8.0-py3-none-any.whl",
+    "flair (>=0.14.0,<1.0.0)",
+    "httpx (>=0.27.0,<1.0.0)",
+    "numpy (>=2.1.0,<3.0.0)",
+    "presidio-analyzer (>=2.2.0,<3.0.0)",
+    "rouge-score (>=0.1.2,<0.2.0)",
+    "sacrebleu (>=2.5.0,<3.0.0)",
+    "scipy (>=1.14.0,<2.0.0)",
+    "sentence-transformers (>=3.1.0,<6.0.0)",
+    "spacy (>=3.8.0,<4.0.0)",
+    "textstat (>=0.7.11,<0.8.0)",
+    "transformers (>=4.45.0,<6.0.0)"
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "SIM", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]

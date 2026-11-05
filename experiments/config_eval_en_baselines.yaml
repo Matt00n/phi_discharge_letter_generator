@@ -1,0 +1,101 @@
+# English reference BASELINES: i2b2 and mimic. ALL metrics except the LLM judge,
+# neural ON (intra-corpus BERTScore/embedding diversity IS reported).
+#
+# These English corpora run SEPARATELY from the synthetic/German corpora on
+# purpose. Rationale:
+#   * We DO want intra-corpus neural diversity (BERTScore F1, embedding cosine)
+#     for i2b2/mimic so the paper can compare our corpus's internal diversity
+#     against established baselines on equal footing. This is within-language and
+#     fully interpretable.
+#   * We do NOT want CROSS-corpus (German-synthetic vs English) neural/lexical
+#     distances: different languages -> disjoint vocabularies and language-
+#     dominated embedding distances, not a clinical-realism signal. Keeping these
+#     corpora in a separate run means that misleading synth-vs-English cross pair
+#     is never computed at all. The only cross pair produced here is i2b2 vs
+#     mimic (both English), which is legitimate.
+#
+# CAVEAT for the paper: BERTScore runs with rescale_with_baseline=False, so raw
+# F1 magnitudes are not baseline-normalized and differ by language. Treat
+# language-robust intra-diversity metrics (MTLD, Distinct-n, 4-gram self-
+# repetition) as primary when comparing across German/English; read intra-corpus
+# BERTScore/cosine as corroborating, within-language evidence.
+#
+# Run:  python -m experiments.evaluation --config experiments/config_eval_en_baselines.yaml
+schema_version: 2
+random_seed: 1729
+output_path: results/eval_en_baselines.json
+overwrite: false
+
+pair_sample_size: 10000
+bootstrap_samples: 2000
+confidence_level: 0.95
+top_k_ngrams: 50
+max_distribution_documents: 2000
+bandwidth_sample_size: 2000
+lexical_casefold: true
+strict_optional_dependencies: true
+
+deduplication:
+  ngram_size: 5
+  jaccard_threshold: 0.80
+  exhaustive_max_documents: 2000
+  minhash_permutations: 256
+  max_reported_pairs: 100
+
+profile_diversity:
+  close_distance_threshold: 0.10
+  exhaustive_max_documents: 5000
+  pair_distance_sample_size: 100000
+  max_reported_closest_pairs: 100
+  max_reported_field_frequencies: 100
+
+readability:
+  enabled: true
+
+llm_judge:
+  enabled: false
+  allow_external_api_calls: false
+  max_concurrent_requests: 12
+
+models:
+  enabled: true
+  embedding_model: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+  embedding_revision: null
+  embedding_batch_size: 32
+  embedding_chunk_tokens: 384
+  bertscore_model: FacebookAI/xlm-roberta-large
+  bertscore_revision: null
+  bertscore_num_layers: 17
+  bertscore_batch_size: 16
+  bertscore_max_tokens: 510
+  bertscore_pair_sample_size: 1000
+  subword_tokenizer_model: null
+  subword_tokenizer_revision: null
+  device: null
+
+datasets:
+  - name: i2b2
+    path: datasets/_adapted/i2b2.jsonl
+    format: jsonl
+    text_field: text
+    id_field: doc_id
+    phi_spans_field: null
+    icd_fields: []
+    extract_icd_from_text: true
+    extract_ops_from_text: true
+    icd_catalog_path: ../data/icd10_codes.txt
+    language: en
+    spacy_model: en_core_web_sm
+
+  - name: mimic
+    path: datasets/_adapted/mimic.jsonl
+    format: jsonl
+    text_field: text
+    id_field: doc_id
+    phi_spans_field: null
+    icd_fields: []
+    extract_icd_from_text: true
+    extract_ops_from_text: true
+    icd_catalog_path: ../data/icd10_codes.txt
+    language: en
+    spacy_model: en_core_web_sm
